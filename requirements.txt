@@ -1,0 +1,14 @@
+pandas
+numpy
+python-dotenv
+pytest
+matplotlib
+scikit-learn
+mne
+scipy
+jupyter
+seaborn
+xgboost
+imbalanced-learn
+hmmlearn
+

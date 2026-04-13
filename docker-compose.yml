@@ -1,0 +1,8 @@
+version: "3.9"
+services:
+  sleep-ml:
+    build: .
+    volumes:
+      - ./data:/app/data   # monta tu carpeta data en el contenedor
+    environment:
+      - DATASET=sleep-edf  # nombre del dataset que planeas usar (aunque la carpeta esté vacía)

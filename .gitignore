@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+
+# Virtual env
+.venv/
+venv/
+
+# Environment files
+.env
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Data outputs — raw and processed data are too large for GitHub (56 GB)
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# Results (CSVs + PNGs) are tracked — they are small and needed for the report
+# data/results/ is intentionally NOT ignored
+
+# Reports
+reports/*
+!reports/.gitkeep
+
