@@ -8,7 +8,12 @@ __pycache__
 *.pyo
 *.pyd
 .ipynb_checkpoints
-data/raw/*
-data/processed/*
-reports/*
+
+# Large data directories — mounted as Docker volume at runtime
+data/
+reports/
+
+# Temp files
+~$*
+*.tmp
 
