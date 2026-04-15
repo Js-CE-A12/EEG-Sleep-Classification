@@ -1,0 +1,150 @@
+============================================================
+  Sleep Stage Classification — Execution Guide
+  Run each script in order from the project root directory.
+============================================================
+
+PREREQUISITES
+-------------
+1. Install dependencies:
+     pip install -r requirements.txt
+
+2. Place Sleep-EDF Expanded data at:
+     data/sleep-edf/sleep-edf-database-expanded-1.0.0/sleep-cassette/
+     data/sleep-edf/sleep-edf-database-expanded-1.0.0/sleep-telemetry/
+
+   Download from: https://physionet.org/content/sleep-edfx/1.0.0/
+
+
+PHASE 1 — EDF to CSV
+---------------------
+Reads raw EDF files (Fpz-Cz channel + hypnogram), segments into 30-second
+epochs, maps stage annotations to labels 0-4, saves one CSV per subject.
+
+    python src/edf_to_csv.py
+
+Output: data/processed/sleep-cassette/   (one CSV per SC subject)
+
+
+PHASE 2 — Preprocessing
+------------------------
+Applies 0.5-40 Hz bandpass filter (Butterworth order 4), removes artifact
+epochs (amplitude > 6 std), z-score normalizes per subject.
+
+    python src/preprocess.py
+
+Output: data/processed/sleep-cassette-clean/   (cleaned CSVs)
+
+
+PHASE 3 — Feature Extraction
+-----------------------------
+Extracts 25 features per epoch: 9 time-domain, 14 frequency-domain,
+2 non-linear (sample entropy, permutation entropy).
+
+    python src/feature_extraction.py
+
+Output: data/processed/features/   (one feature CSV per subject, ~373K rows total)
+
+
+PHASE 4 — Model Training
+-------------------------
+Trains SVM-RBF, Random Forest, and XGBoost using subject-wise 5-fold
+cross-validation (GroupKFold, SEED=42). Reports per-fold and summary metrics.
+
+    python src/train_models.py
+
+Output: data/results/
+  - fold_metrics.csv
+  - summary_metrics.csv
+  - confusion_<model>.png
+  - feature_importance_<model>.png
+  - model_comparison_f1.png
+  - run_config.json
+
+Note: SVM uses stratified subsample of 15,000 epochs per fold due to O(n^2) scaling.
+Expected runtime: ~15-30 min depending on hardware.
+
+
+PHASE 5 — HMM Smoother
+-----------------------
+Re-runs XGBoost (same folds/seed) and applies Viterbi decoding as a
+post-processing step to correct biologically impossible stage transitions.
+
+    python src/hmm_smoother.py
+
+Output: data/results/
+  - hmm_fold_metrics.csv
+  - hmm_summary_metrics.csv
+  - transition_matrix.png
+  - confusion_XGBoost_raw.png
+  - confusion_HMM_smoothed.png
+  - hmm_comparison.png
+
+
+PHASE 6 — Statistical Evaluation
+----------------------------------
+Bootstrap 95% CI (1000 resamples), McNemar test for all model pairs,
+and AUC-ROC curves (one-vs-rest) for RF and XGBoost.
+
+    python src/evaluate.py
+
+Output: data/results/
+  - predictions.csv
+  - bootstrap_ci.csv
+  - mcnemar_results.csv
+  - auc_roc.csv
+  - bootstrap_ci.png
+  - roc_curves_RandomForest.png
+  - roc_curves_XGBoost.png
+
+Note: Phase 4 must be completed first (summary_metrics.csv required).
+
+
+PHASE 7 — Cross-Dataset Experiment
+------------------------------------
+Trains RF and XGBoost on all SC subjects, tests on all ST subjects.
+If ST features do not exist, the script auto-runs the full ST pipeline
+(EDF->CSV, preprocess, feature extraction) before training.
+
+    python src/cross_dataset.py
+
+Output: data/results/
+  - cross_dataset_metrics.csv
+  - cross_dataset_comparison.png
+  - confusion_cross_RandomForest.png
+  - confusion_cross_XGBoost.png
+
+Note: First run takes ~10-15 min to process ST subjects. Subsequent runs
+      skip the pipeline and load pre-computed features.
+
+
+============================================================
+  FULL PIPELINE (run all phases in sequence)
+============================================================
+
+python src/edf_to_csv.py
+python src/preprocess.py
+python src/feature_extraction.py
+python src/train_models.py
+python src/hmm_smoother.py
+python src/evaluate.py
+python src/cross_dataset.py
+
+============================================================
+  WITH DOCKER
+============================================================
+
+docker compose build
+docker compose run --rm app python src/edf_to_csv.py
+docker compose run --rm app python src/preprocess.py
+docker compose run --rm app python src/feature_extraction.py
+docker compose run --rm app python src/train_models.py
+docker compose run --rm app python src/hmm_smoother.py
+docker compose run --rm app python src/evaluate.py
+docker compose run --rm app python src/cross_dataset.py
+
+============================================================
+  RESULTS LOCATION
+============================================================
+
+All output CSVs and figures: data/results/
+Intermediate processed data: data/processed/

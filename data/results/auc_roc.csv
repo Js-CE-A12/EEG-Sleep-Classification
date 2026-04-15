@@ -1,0 +1,11 @@
+model,class,auc
+RandomForest,W,0.9875
+RandomForest,N1,0.8817
+RandomForest,N2,0.9597
+RandomForest,N3,0.9864
+RandomForest,REM,0.932
+XGBoost,W,0.9891
+XGBoost,N1,0.8905
+XGBoost,N2,0.9633
+XGBoost,N3,0.9897
+XGBoost,REM,0.9371
