@@ -11,4 +11,5 @@ seaborn
 xgboost
 imbalanced-learn
 hmmlearn
+python-docx
 

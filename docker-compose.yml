@@ -1,8 +1,18 @@
 version: "3.9"
+
 services:
-  sleep-ml:
+  app:
     build: .
     volumes:
-      - ./data:/app/data   # monta tu carpeta data en el contenedor
-    environment:
-      - DATASET=sleep-edf  # nombre del dataset que planeas usar (aunque la carpeta esté vacía)
+      # Mount data folder so raw EDF files are accessible and results persist on host
+      - ./data:/app/data
+    # Run a single phase:
+    #   docker compose run --rm app python src/edf_to_csv.py
+    #   docker compose run --rm app python src/preprocess.py
+    #   docker compose run --rm app python src/feature_extraction.py
+    #   docker compose run --rm app python src/train_models.py
+    #   docker compose run --rm app python src/hmm_smoother.py
+    #   docker compose run --rm app python src/evaluate.py
+    #   docker compose run --rm app python src/cross_dataset.py
+    # Run full pipeline (default CMD):
+    #   docker compose up

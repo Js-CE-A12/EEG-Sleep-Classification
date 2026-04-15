@@ -5,10 +5,20 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
+# Install dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Copy source code
 COPY . .
 
-CMD ["python", "src/main.py", "--input", "data/raw/dataset.csv", "--output", "data/processed/dataset_limpio.csv"]
-
+# Default: run the full pipeline in sequence
+# Override with: docker compose run --rm app python src/<script>.py
+CMD ["bash", "-c", \
+     "python src/edf_to_csv.py && \
+      python src/preprocess.py && \
+      python src/feature_extraction.py && \
+      python src/train_models.py && \
+      python src/hmm_smoother.py && \
+      python src/evaluate.py && \
+      python src/cross_dataset.py"]
